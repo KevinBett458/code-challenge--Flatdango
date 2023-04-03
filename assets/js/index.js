@@ -54,23 +54,59 @@ const filmsList = document.getElementById('films');
 // Make a GET request
 fetch(`${BASE_URL}/films`)
   .then(response => response.json())
-  .then(data => {
+  .then(json => {
 // Remove any existing child elements in the ul
     while (filmsList.firstChild) {
       filmsList.removeChild(filmsList.firstChild);
     }
 
 // Loop through the movie data and create a new li element for each movie title
-    data.forEach(movie => {
-      const li = document.createElement('li');
-      li.textContent = movie.title;
-      li.classList.add('film', 'item');
+    json.forEach(movie => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <img src="${movie.poster}" alt="${movie.title}">
+        <div>
+          <h3>${movie.title}</h3>
+          <p>${movie.runtime} min</p>
+          <p>${movie.showtime}</p>
+          <p>${movie.description}</p>
+        </div>
+      `;
+      li.classList.add("film", "item");
       filmsList.appendChild(li);
     });
   })
   .catch(error => {
     console.error('Error fetching movies:', error);
   })
-    
+
+const buyTicketButton = document.getElementById('buy-ticket');
+// When the button is clicked, send a POST request to the server to buy a ticket
+buyTicketButton.addEventListener('click', () => {
+  fetch(`${BASE_URL}/films/1/buy-ticket`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+    .then(response => response.json())
+    .then(filmData => {
+// Show available tickets from the theater's capacity and the number of tickets sold
+      const availTickets = filmData.capacity - filmData.tickets_sold;
+
+// Update the available tickets text on the frontend
+      const movieTickets = document.getElementById('avail-tickets');
+      movieTickets.textContent = `${availTickets} tickets available`;
+
+// If there are no more tickets available, disable the "Buy Ticket" button
+      if (availTickets === 0) {
+        buyTicketButton.disabled = true;
+      }
+    })
+    .catch(error => {
+      console.error('Cannot buy ticket:', error);
+    });
+});
+
 
 
